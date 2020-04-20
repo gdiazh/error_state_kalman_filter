@@ -1,0 +1,5 @@
+plots/
+__pycache__/
+
+*.pyc
+*~
