@@ -16,7 +16,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import time
 
-class gyroSim2:
+class gyroSim:
     def __init__(self, rw_std, rw_step, rw_limit):
         self.wm = np.zeros(3)
         self.bias = np.zeros(3)
@@ -119,7 +119,7 @@ if __name__ == '__main__':
     rate_true_Nx3_b[:,2] = 0.1*np.sin(2*np.pi*f*t+2*np.pi/3) + 0.1
     
     # Gyro Model
-    gyro = gyroSim2(rw_std = 1e-4, rw_step = 0.01, rw_limit = 1e-3)
+    gyro = gyroSim(rw_std = 1e-4, rw_step = 0.01, rw_limit = 1e-3)
     
     # Data Storage
     rate_m_Nx3_b = np.zeros((N, 3))

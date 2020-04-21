@@ -15,7 +15,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import time
 
-class magSim2:
+class magSim:
     def __init__(self, nrs_std):
         self.magm = np.zeros(3)
         self.bias = np.zeros(3)
@@ -73,7 +73,7 @@ if __name__ == '__main__':
     mag_true_Nx3_b[:,2] = np.zeros(N)
     
     # Mag Model
-    mag = magSim2(nrs_std = 1e-4)
+    mag = magSim(nrs_std = 1e-4)
     
     # Data Storage
     mag_m_Nx3_b = np.zeros((N, 3))

@@ -100,8 +100,8 @@ if __name__ == '__main__':
     import matplotlib.pyplot as plt
     import time
 
-    from gyroSim2 import gyroSim2
-    from magSim2 import magSim2
+    from gyroSim import gyroSim
+    from magSim import magSim
 
     # Time parameters for simulation
     tf = 50
@@ -117,7 +117,7 @@ if __name__ == '__main__':
     rate_true_Nx3_b[:,2] = np.pi*np.ones(N)
     
     # Gyro Model
-    gyro = gyroSim2(rw_std = 1e-4, rw_step = 0.01, rw_limit = 1e-3)
+    gyro = gyroSim(rw_std = 1e-4, rw_step = 0.01, rw_limit = 1e-3)
     
     # Gyro Data Storage
     rate_m_Nx3_b = np.zeros((N, 3))
@@ -132,7 +132,7 @@ if __name__ == '__main__':
     mag_true_Nx3_b[:,2] = np.zeros(N)
 
     # Mag Model
-    mag = magSim2(nrs_std = 1e-4)
+    mag = magSim(nrs_std = 1e-4)
     
     # Mag Data Storage
     mag_m_Nx3_b = np.zeros((N, 3))
