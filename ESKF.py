@@ -13,7 +13,7 @@
 """
 
 import numpy as np
-from quaternions import *
+from Library.math_sup.Quaternion import Quaternions
 
 class ErrorStateKalmanFilter(object):
     def __init__(self, dim_x, dim_dx, dim_u, dim_z):
@@ -24,7 +24,7 @@ class ErrorStateKalmanFilter(object):
 
         self.x = np.zeros((dim_x, 1))       # state x = [q, wb] (7x1 vector)
         self.dx = np.zeros((dim_dx, 1))     # error state dx = [dtheta, dwb] (6x1 vector)
-        self.q = np.array([[1],[0],[0],[0]])# states 1-4
+        self.q = Quaternions([0, 0, 0, 1])	# states 1-4
         self.wb = (1e-4)*np.ones((3, 1))    # states 5-7
 
         self.P = np.eye(dim_dx)             # uncertainty covariance (6x6 matrix)
@@ -53,9 +53,8 @@ class ErrorStateKalmanFilter(object):
         * @update self.wb np.array((3,1)) Nominal gyro bias
         """
 
-        [v, phi] = eulerRotation((u-self.wb)*dt)    # rotation vector theta = v*phi
-        dq_wdt = np.append([[np.cos(phi/2.0)]], v*np.sin(phi/2.0), axis = 0)
-        self.q = quaternionComposition(self.q, dq_wdt)
+        dq_wdt = Quaternions([(u-self.wb)*dt])
+        self.q = self.q * dq_wdt
         # self.wb = self.wb
         self.x[0:4] = self.q
         self.x[4:7] = self.wb
@@ -74,9 +73,11 @@ class ErrorStateKalmanFilter(object):
         """
 
         # Error state covariance prediction
-        [v, phi] = eulerRotation((u-self.wb)*dt)    # rotation vector theta = v*phi
-        U_skew = skew(v)
-        Rwb = self.I33+np.sin(phi)*U_skew + (1-np.cos(phi))*U_skew*U_skew #Rodrigues rotation formula, eq.77, pag.18
+        # [v, phi] = eulerRotation((u-self.wb)*dt)    # rotation vector theta = v*phi
+        # U_skew = skew(v)
+        # Rwb = self.I33+np.sin(phi)*U_skew + (1-np.cos(phi))*U_skew*U_skew #Rodrigues rotation formula, eq.77, pag.18
+        dq_wdt = Quaternions([(u-self.wb)*dt])
+        Rwb = dq_wdt.conjugate().todcm()
         F1 = np.append(Rwb, -self.I33*dt, axis = 1)
         F2 = np.append(np.zeros((3,3)), self.I33, axis = 1)
         self.F = np.append(F1, F2, axis = 0)
@@ -111,11 +112,14 @@ class ErrorStateKalmanFilter(object):
         # Auxiliar error state variables
         dtheta = self.dx[0:3]
         dwb = self.dx[3:6]
-        [v, phi] = eulerRotation(dtheta)    # rotation vector theta = v*phi
-        dq = np.append([[np.cos(phi/2.0)]], v*np.sin(phi/2.0), axis = 0)
+        
+        # [v, phi] = eulerRotation(dtheta)    # rotation vector theta = v*phi
+        # dq = np.append([[np.cos(phi/2.0)]], v*np.sin(phi/2.0), axis = 0)
+
+        dq = Quaternions([dtheta])
 
         # Injection of the observed error to the nominal state
-        self.q = quaternionComposition(self.q, dq)
+        self.q = self.q * dq
         self.wb = self.wb + dwb
         self.x[0:4] = self.q
         self.x[4:7] = self.wb
