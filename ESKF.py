@@ -22,10 +22,10 @@ class ErrorStateKalmanFilter(object):
         self.dim_u = dim_u
         self.dim_z = dim_z
 
-        self.x = np.zeros((dim_x, 1))       # state x = [q, wb] (7x1 vector)
+        self.x = np.zeros(dim_x)       # state x = [q, wb] (7x1 vector)
         self.dx = np.zeros((dim_dx, 1))     # error state dx = [dtheta, dwb] (6x1 vector)
         self.q = Quaternions([0, 0, 0, 1])	# states 1-4
-        self.wb = (1e-4)*np.ones((3, 1))    # states 5-7
+        self.wb = (1e-4)*np.ones(3)         # states 5-7
 
         self.P = np.eye(dim_dx)             # uncertainty covariance (6x6 matrix)
         self.F = np.eye(dim_dx)             # error state transition matrix (6x6 matrix)
@@ -56,7 +56,7 @@ class ErrorStateKalmanFilter(object):
         dq_wdt = Quaternions([(u-self.wb)*dt])
         self.q = self.q * dq_wdt
         # self.wb = self.wb
-        self.x[0:4] = self.q
+        self.x[0:4] = self.q()
         self.x[4:7] = self.wb
 
     def predict_error(self, u, dt):
@@ -77,7 +77,7 @@ class ErrorStateKalmanFilter(object):
         # U_skew = skew(v)
         # Rwb = self.I33+np.sin(phi)*U_skew + (1-np.cos(phi))*U_skew*U_skew #Rodrigues rotation formula, eq.77, pag.18
         dq_wdt = Quaternions([(u-self.wb)*dt])
-        Rwb = dq_wdt.conjugate().todcm()
+        Rwb = dq_wdt.todcm().transpose()
         F1 = np.append(Rwb, -self.I33*dt, axis = 1)
         F2 = np.append(np.zeros((3,3)), self.I33, axis = 1)
         self.F = np.append(F1, F2, axis = 0)

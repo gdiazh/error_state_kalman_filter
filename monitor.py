@@ -31,7 +31,7 @@ class Monitor(object):
             plt.xscale(self.scale)
         for i in range(0, len(self.x)):
             if self.marker != None:
-                a, = plt.plot(self.x[i], self.y[i], marker = self.marker, label=self.sig_name[i])
+                a, = plt.plot(self.x[i], self.y[i], marker = self.marker[i], label=self.sig_name[i])
                 legend_handler.append(a)
                 plt.legend(handles=legend_handler)
             else:
