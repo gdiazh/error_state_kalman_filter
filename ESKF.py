@@ -52,9 +52,8 @@ class ErrorStateKalmanFilter(object):
         * @update self.q np.array((4,1)) Nominal quaternion
         * @update self.wb np.array((3,1)) Nominal gyro bias
         """
+        self.rungeKutta(self.q(), u-self.wb, dt) # quaternion integration
 
-        dq_wdt = Quaternions([(u-self.wb)*dt])
-        self.q = self.q * dq_wdt
         # self.wb = self.wb
         self.x[0:4] = self.q()
         self.x[4:7] = self.wb
@@ -127,3 +126,42 @@ class ErrorStateKalmanFilter(object):
     def eskfReset(self):
         self.dx = np.zeros((self.dim_dx, 1))     # dx = 0
         self.P = np.eye(self.dim_dx)             # P = G*P*G, G=I => P = P, eq285-286, pag.65
+
+    def dq_dt(self, q, w):
+        Omega = np.zeros((4, 4))
+        Omega[1, 0] = -w[2]
+        Omega[2, 0] = w[1]
+        Omega[3, 0] = -w[0]
+
+        Omega[0, 1] = w[2]
+        Omega[0, 2] = -w[1]
+        Omega[0, 3] = w[0]
+
+        Omega[1, 2] = w[0]
+        Omega[1, 3] = w[1]
+
+        Omega[2, 1] = -w[0]
+        Omega[2, 3] = w[2]
+
+        Omega[3, 1] = -w[1]
+        Omega[3, 2] = -w[2]
+
+        return 0.5*Omega.dot(q)
+
+    def rungeKutta(self, q, w, dt):
+        """
+        * Runge-Kutta method to integrate the quaternion kinematics diferential equation
+        *
+        * @param q np.array(4) Actual quaternion state
+        * @param w np.array(3) Actual angular rates
+        * @update self.q Quaternion() Next quaternion state
+        """
+        k1 = self.dq_dt(q, w)
+        k2 = self.dq_dt(q + 0.5*dt*k1, w)
+        k3 = self.dq_dt(q + 0.5*dt*k2, w)
+        k4 = self.dq_dt(q + dt*k3, w)
+
+        q_next = q + dt*(k1 + 2*(k2+k3)+k4)/6.0
+
+        self.q.setquaternion(q_next)
+        self.q.normalize()
