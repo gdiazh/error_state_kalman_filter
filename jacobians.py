@@ -9,12 +9,13 @@
 
 import numpy as np
 from Library.math_sup.Quaternion import Quaternions
+from Library.math_sup.tools_reference_frame import unitVector
 
 class Jacobians(object):
     def __init__(self):
         self.sensors = "magnetometer"
 
-    def hx_mag(self, x, mr_33_i):
+    def hx_mag(self, x, m_33_i):
         """
         * Magnetic Measurement Model
         * Takes a state variable and the actual reference
@@ -25,13 +26,14 @@ class Jacobians(object):
         * @param mr_33_i np.array(3) magnetic reference vector in inercial frame
         * @return m_33_b np.array((3,1)) magnetic measurement in body frame
         """
+        mr_33_i = unitVector(m_33_i)
         q = Quaternions([x[0], x[1], x[2], x[3]])
         R = q.todcm()
-        m_33_b = R.dot(mr_33_i)
+        mr_33_b = R.dot(mr_33_i)
 
-        return m_33_b
+        return mr_33_b
 
-    def Hx_mag(self, x, mr_33_i):
+    def Hx_mag(self, x, m_33_i):
         """
         * Jacobian of the Magnetic Measurement Model function
         * Takes a state variable and returns the Jacobian of the
@@ -41,6 +43,7 @@ class Jacobians(object):
         * @param mr_33_i np.array(3) magnetic reference vector in inercial frame
         * @return H np.array((3,6)) Magnetic Jacobian Matrix H
         """
+        mr_33_i = unitVector(m_33_i)
         q0 = x[3]
         q1 = x[0]
         q2 = x[1]

@@ -114,10 +114,6 @@ class ErrorStateKalmanFilter(object):
         # Auxiliar error state variables
         dtheta = self.dx[0:3]
         dwb = self.dx[3:6]
-        
-        # [v, phi] = eulerRotation(dtheta)    # rotation vector theta = v*phi
-        # dq = np.append([[np.cos(phi/2.0)]], v*np.sin(phi/2.0), axis = 0)
-
         dq = Quaternions([dtheta])
 
         # Injection of the observed error to the nominal state
