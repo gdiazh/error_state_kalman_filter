@@ -85,7 +85,7 @@ class ErrorStateKalmanFilter(object):
         self.F = np.append(F1, F2, axis = 0)
         self.P = self.F * self.P * self.F.T + self.Q
 
-    def update(self, z, HJacobian, h):
+    def update(self, z, HJacobian, h, args):
         """
         * Observe the error state and covariance via filter correction
         * based on absolute attitude measurements and update nominal state.
@@ -99,14 +99,14 @@ class ErrorStateKalmanFilter(object):
         """
 
         # Kalman Gain
-        H = HJacobian(self.x)              #(dim_z,dim_dx)
+        H = HJacobian(self.x, args)        #(dim_z,dim_dx)
         PHt = self.P.dot(H.T)              #(dim_dx, dim_z)
         S = H.dot(PHt) + self.R            #(dim_z, dim_z)
         SI = np.linalg.inv(S)
         K = PHt.dot(SI)                    #(dim_dx, dim_z)
         
         # Error state update
-        self.dx = K.dot(z-h(self.x))
+        self.dx = K.dot(z-h(self.x, args))
         
         # Error covariance update
         self.P = (self.I-K.dot(H))*self.P
@@ -123,7 +123,7 @@ class ErrorStateKalmanFilter(object):
         # Injection of the observed error to the nominal state
         self.q = self.q * dq
         self.wb = self.wb + dwb
-        self.x[0:4] = self.q
+        self.x[0:4] = self.q()
         self.x[4:7] = self.wb
 
     def eskfReset(self):

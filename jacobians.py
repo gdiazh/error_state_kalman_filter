@@ -29,7 +29,7 @@ class Jacobians(object):
         R = q.todcm()
         m_33_b = R.dot(mr_33_i)
 
-        return m_33_eci
+        return m_33_b
 
     def Hx_mag(self, x, mr_33_i):
         """
@@ -64,6 +64,6 @@ class Jacobians(object):
         				 [q3, q0, -q1],
         				 [-q2, q1, q0]])
         H = np.zeros((3,6))
-        H[:,0:3] = Hq*Qdth
+        H[:,0:3] = Hq.dot(Qdth)
 
         return H
