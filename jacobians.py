@@ -9,7 +9,7 @@
 
 import numpy as np
 from Library.math_sup.Quaternion import Quaternions
-from Library.math_sup.tools_reference_frame import unitVector
+from Library.math_sup.tools_reference_frame import unitVector, skewMatrix
 
 class Jacobians(object):
     def __init__(self):
@@ -44,29 +44,10 @@ class Jacobians(object):
         * @return H np.array((3,6)) Magnetic Jacobian Matrix H
         """
         mr_33_i = unitVector(m_33_i)
-        q0 = x[3]
-        q1 = x[0]
-        q2 = x[1]
-        q3 = x[2]
-        Hq = np.zeros((3,4))
-        Hq[0,0] = np.array([q0, q3, -q2]).dot(mr_33_i)
-        Hq[0,1] = np.array([q1, q2, q3]).dot(mr_33_i)
-        Hq[0,2] = np.array([-q2, q1, -q0]).dot(mr_33_i)
-        Hq[0,3] = np.array([q3, q0, q1]).dot(mr_33_i)
-        Hq[1,0] = np.array([-q3, q0, q1]).dot(mr_33_i)
-        Hq[1,1] = np.array([q2, -q1, q0]).dot(mr_33_i)
-        Hq[1,2] = np.array([q1, q2, q3]).dot(mr_33_i)
-        Hq[1,3] = np.array([-q0, -q3, q2]).dot(mr_33_i)
-        Hq[2,0] = np.array([q2, -q1, q0]).dot(mr_33_i)
-        Hq[2,1] = np.array([q3, -q0, -q1]).dot(mr_33_i)
-        Hq[2,2] = np.array([q0, q3, -q2]).dot(mr_33_i)
-        Hq[2,3] = np.array([q1, q2, q3]).dot(mr_33_i)
-
-        Qdth = np.array([[-q1, -q2, -q3],
-        				 [q0, -q3, q2],
-        				 [q3, q0, -q1],
-        				 [-q2, q1, q0]])
+        q = Quaternions([x[0], x[1], x[2], x[3]])
+        R = q.todcm()
+        mr_33_b = R.dot(mr_33_i)
         H = np.zeros((3,6))
-        H[:,0:3] = Hq.dot(Qdth)
+        H[:,0:3] = skewMatrix(mr_33_b)
 
         return H
