@@ -27,10 +27,14 @@ class ErrorStateKalmanFilter(object):
         self.q = Quaternions([0, 0, 0, 1])	# states 1-4
         self.wb = np.zeros(3)               # states 5-7
 
+        self.std_rn_w = 1e-6                # gyro noise standard deviation [rad/s]
+        self.std_rw_w = 1e-6                # gyro random walk standard deviation [rad/s*s^0.5]
+        self.std_rn_mag = 1e-6              # magnetometer noise standard deviation []
+
         self.P = np.eye(dim_dx)             # uncertainty covariance (6x6 matrix)
         self.F = np.eye(dim_dx)             # error state transition matrix (6x6 matrix)
-        self.R = (1e-4)*np.eye(dim_z)       # measurement uncertainty (3x3 diagonal matrix)
-        self.Q = (1e-4)*np.eye(dim_dx)      # process uncertainty (6x6 matrix)
+        self.R = (self.std_rn_mag**2)*np.eye(dim_z) # measurement uncertainty (3x3 diagonal matrix)
+        self.Q = (self.std_rn_w**2)*np.eye(dim_dx)  # process uncertainty (6x6 matrix)
         self.y = np.zeros((dim_z, 1))       # residual (3x1 vector)
 
         self.K = np.zeros((dim_dx, dim_z))  # kalman gain (6x3 matrix)
@@ -75,14 +79,12 @@ class ErrorStateKalmanFilter(object):
         """
 
         # Error state covariance prediction
-        # [v, phi] = eulerRotation((u-self.wb)*dt)    # rotation vector theta = v*phi
-        # U_skew = skew(v)
-        # Rwb = self.I33+np.sin(phi)*U_skew + (1-np.cos(phi))*U_skew*U_skew #Rodrigues rotation formula, eq.77, pag.18
         dq_wdt = Quaternions([(u-self.wb)*dt])
         Rwb = dq_wdt.todcm().transpose()
         F1 = np.append(Rwb, -self.I33*dt, axis = 1)
         F2 = np.append(np.zeros((3,3)), self.I33, axis = 1)
         self.F = np.append(F1, F2, axis = 0)
+        self.updateQ(dt)
         self.P = self.F * self.P * self.F.T + self.Q
 
     def update(self, z, HJacobian, h, args):
@@ -125,6 +127,13 @@ class ErrorStateKalmanFilter(object):
     def eskfReset(self):
         self.dx = np.zeros((self.dim_dx, 1))     # dx = 0
         self.P = np.eye(self.dim_dx)             # P = G*P*G, G=I => P = P, eq285-286, pag.65
+
+    def updateQ(self, dt):
+        n = int(self.dim_dx/2)
+        for i in range(n):
+            self.Q[i,i] = (self.std_rn_w**2) * dt**2
+        for i in range(n, self.dim_dx):
+            self.Q[i,i] = (self.std_rw_w**2) * dt
 
     def dynamics(self, q, w):
         Omega = self.omega4kinematics(w)
