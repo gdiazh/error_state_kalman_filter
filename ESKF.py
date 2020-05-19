@@ -23,19 +23,19 @@ class ErrorStateKalmanFilter(object):
         self.dim_z = dim_z
 
         self.x = np.zeros(dim_x)            # state x = [q, wb] (7x1 vector)
-        self.dx = np.zeros((dim_dx, 1))     # error state dx = [dtheta, dwb] (6x1 vector)
+        self.dx = np.zeros(dim_dx)          # error state dx = [dtheta, dwb] (6x1 vector)
         self.q = Quaternions([0, 0, 0, 1])	# states 1-4
         self.wb = np.zeros(3)               # states 5-7
 
-        self.std_rn_w = 1e-6                # gyro noise standard deviation [rad/s]
-        self.std_rw_w = 1e-6                # gyro random walk standard deviation [rad/s*s^0.5]
-        self.std_rn_mag = 1e-6              # magnetometer noise standard deviation []
+        self.std_rn_w = 1e-3                # gyro noise standard deviation [rad/s]
+        self.std_rw_w = 1e-3                # gyro random walk standard deviation [rad/s*s^0.5]
+        self.std_rn_mag = 1e-4              # magnetometer noise standard deviation []
 
         self.P = np.eye(dim_dx)             # uncertainty covariance (6x6 matrix)
         self.F = np.eye(dim_dx)             # error state transition matrix (6x6 matrix)
         self.R = (self.std_rn_mag**2)*np.eye(dim_z) # measurement uncertainty (3x3 diagonal matrix)
         self.Q = (self.std_rn_w**2)*np.eye(dim_dx)  # process uncertainty (6x6 matrix)
-        self.y = np.zeros((dim_z, 1))       # residual (3x1 vector)
+        self.y = np.zeros(dim_z)            # residual (3x1 vector)
 
         self.K = np.zeros((dim_dx, dim_z))  # kalman gain (6x3 matrix)
         self.S = np.zeros((dim_z, dim_z))   # system uncertainty (3x3 matrix)
@@ -108,7 +108,8 @@ class ErrorStateKalmanFilter(object):
         K = PHt.dot(SI)                    #(dim_dx, dim_z)
         
         # Error state update
-        self.dx = K.dot(z-h(self.x, args))
+        self.y = z-h(self.x, args)
+        self.dx = K.dot(self.y)
         
         # Error covariance update
         self.P = (self.I-K.dot(H))*self.P
@@ -124,9 +125,10 @@ class ErrorStateKalmanFilter(object):
         self.x[0:4] = self.q()
         self.x[4:7] = self.wb
 
-    def eskfReset(self):
-        self.dx = np.zeros((self.dim_dx, 1))     # dx = 0
-        self.P = np.eye(self.dim_dx)             # P = G*P*G, G=I => P = P, eq285-286, pag.65
+    def reset(self):
+        self.dx = np.zeros((self.dim_dx, 1)) # dx = 0
+        G = np.eye(self.dim_dx)
+        self.P = G*self.P*G.T                # P = G*P*G, G=I => P = P, eq285-286, pag.65
 
     def updateQ(self, dt):
         n = int(self.dim_dx/2)
