@@ -21,7 +21,7 @@ class Monitor(object):
         self.sig_name = sig_name
 
     def plot(self):
-        plt.figure()
+        plt.figure(self.title)
         plt.title(self.title)
         plt.ylabel(self.ylabel)
         plt.xlabel(self.xlabel)

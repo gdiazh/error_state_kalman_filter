@@ -40,7 +40,7 @@ class Jacobians(object):
         * measurement model that would correspond to that state.
         *
         * @param x np.array(7) Nominal state
-        * @param mr_33_i np.array(3) magnetic reference vector in inercial frame
+        * @param m_33_i np.array(3) magnetic reference vector in inercial frame
         * @return H np.array((3,6)) Magnetic Jacobian Matrix H
         """
         mr_33_i = unitVector(m_33_i)
@@ -49,5 +49,42 @@ class Jacobians(object):
         mr_33_b = R.dot(mr_33_i)
         H = np.zeros((3,6))
         H[:,0:3] = skewMatrix(mr_33_b)
+
+        return H
+
+    def hx_sun(self, x, s_33_i):
+        """
+        * Sun Vector Measurement Model
+        * Takes a state variable and the actual reference
+        * sun vector and returns the sun vector
+        * measurement that would correspond to that state.
+        *
+        * @param x np.array(7) Nominal state
+        * @param sr_33_i np.array(3) sun reference vector in inercial frame
+        * @return s_33_b np.array((3,1)) sun vector measurement in body frame
+        """
+        sr_33_i = unitVector(s_33_i)
+        q = Quaternions([x[0], x[1], x[2], x[3]])
+        R = q.todcm()
+        sr_33_b = R.dot(sr_33_i)
+
+        return sr_33_b
+
+    def Hx_sun(self, x, s_33_i):
+        """
+        * Jacobian of the Sun Measurement Model function
+        * Takes a state variable and returns the Jacobian of the
+        * measurement model that would correspond to that state.
+        *
+        * @param x np.array(7) Nominal state
+        * @param s_33_i np.array(3) magnetic reference vector in inercial frame
+        * @return H np.array((3,6)) Sun Jacobian Matrix H
+        """
+        sr_33_i = unitVector(s_33_i)
+        q = Quaternions([x[0], x[1], x[2], x[3]])
+        R = q.todcm()
+        sr_33_b = R.dot(sr_33_i)
+        H = np.zeros((3,6))
+        H[:,0:3] = skewMatrix(sr_33_b)
 
         return H

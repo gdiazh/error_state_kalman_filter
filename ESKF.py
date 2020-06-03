@@ -237,3 +237,21 @@ class ErrorStateKalmanFilter(object):
         Omega[3, 2] = -omega_3x3[2]
         
         return Omega
+
+    def get_ss_vect(self, I, I_max):
+        Ix = max(I[0], I[1])
+        sx = -2*np.argmax(I[0], I[1]) + 1
+        Iy = max(I[2], I[3])
+        sy = -2*np.argmax(I[2], I[3]) + 1
+        Iz = max(I[4], 0)
+        sz = -1
+
+        noise_thr = 10  #[uA]
+
+        if Ix<noise_thr and Iy<noise_thr and Iz<noise_thr:
+            # shadow
+            ss_unit_b = np.zeros(3)
+        else:
+            ss_unit_b = np.array([sx*Ix, sy*Iy, sz*Iz])/I_max
+        
+        return ss_unit_b
