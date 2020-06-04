@@ -168,7 +168,7 @@ if __name__ == '__main__':
         detP_est_Nx1_b[i] = np.linalg.det(fusion.eskf.P)
 
     # Data Visualization
-    from monitor import Monitor
+    from visualization.monitor import Monitor
     
     rates_mon = Monitor([t, t, t], [rate_m_Nx3_b[:,0], rate_m_Nx3_b[:,1], rate_m_Nx3_b[:,2]], "Gyro noisy measurements", "rate[rad/s]", "time[s]", sig_name = ["wx", "wy", "wz"])
     rates_mon.plot()

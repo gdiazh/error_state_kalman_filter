@@ -85,7 +85,7 @@ if __name__ == '__main__':
         nrs_gen_Nx3_b[i] = mag.getRNS()
     
     # Data Visualization
-    from monitor import Monitor
+    from visualization.monitor import Monitor
     mag_mon = Monitor([t, t, t], [mag_m_Nx3_b[:,0], mag_m_Nx3_b[:,1], mag_m_Nx3_b[:,2]], "Mag noisy measurements", "mag[]", "time[s]", sig_name = ["mx", "my", "mz"])
     mag_mon.plot()
 
