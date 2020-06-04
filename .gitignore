@@ -1,4 +1,5 @@
 plots/
+visualization/plot_csv_data.py
 __pycache__/
 
 *.pyc
