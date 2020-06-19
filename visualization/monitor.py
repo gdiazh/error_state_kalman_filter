@@ -10,7 +10,7 @@
 import matplotlib.pyplot as plt
 
 class Monitor(object):
-    def __init__(self, x, y, title, ylabel, xlabel, scale = None, marker = None, sig_name = ["signal"]):
+    def __init__(self, x, y, title, ylabel, xlabel, scale = None, marker = None, color = None, sig_name = ["signal"]):
         self.x = x 
         self.y = y
         self.title = title
@@ -18,6 +18,7 @@ class Monitor(object):
         self.xlabel = xlabel
         self.scale = scale
         self.marker = marker
+        self.color = color
         self.sig_name = sig_name
 
     def plot(self):
@@ -30,8 +31,16 @@ class Monitor(object):
             plt.yscale(self.scale)
             plt.xscale(self.scale)
         for i in range(0, len(self.x)):
-            if self.marker != None:
+            if self.marker != None and self.color != None:
+                a, = plt.plot(self.x[i], self.y[i], marker = self.marker[i], color = self.color[i], label=self.sig_name[i])
+                legend_handler.append(a)
+                plt.legend(handles=legend_handler)
+            elif self.marker != None:
                 a, = plt.plot(self.x[i], self.y[i], marker = self.marker[i], label=self.sig_name[i])
+                legend_handler.append(a)
+                plt.legend(handles=legend_handler)
+            elif self.color != None:
+                a, = plt.plot(self.x[i], self.y[i], color = self.color[i], label=self.sig_name[i])
                 legend_handler.append(a)
                 plt.legend(handles=legend_handler)
             else:

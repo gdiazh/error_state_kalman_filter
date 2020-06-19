@@ -26,6 +26,8 @@ class ErrorStateKalmanFilter(object):
         self.dx = np.zeros(dim_dx)          # error state dx = [dtheta, dwb] (6x1 vector)
         self.q = Quaternions([0, 0, 0, 1])	# states 1-4
         self.wb = np.zeros(3)               # states 5-7
+        self.dtheta_mag = np.zeros(3)       # tmp magnetic error observation
+        self.dtheta_css = np.zeros(3)       # tmp csun sensor error observation
 
         self.std_rn_w = 1e-3                # gyro noise standard deviation [rad/s]
         self.std_rw_w = 1e-3                # gyro random walk standard deviation [rad/s*s^0.5]
@@ -87,7 +89,7 @@ class ErrorStateKalmanFilter(object):
         self.updateQ(dt)
         self.P = self.F * self.P * self.F.T + self.Q
 
-    def update(self, z, HJacobian, h, args):
+    def update(self, z, HJacobian, h, args, stype):
         """
         * Observe the error state and covariance via filter correction
         * based on absolute attitude measurements and update nominal state.
@@ -124,6 +126,13 @@ class ErrorStateKalmanFilter(object):
         self.wb = self.wb + dwb
         self.x[0:4] = self.q()
         self.x[4:7] = self.wb
+
+        if stype == "mag":
+            self.dtheta_mag = dtheta
+        elif stype == "css":
+            self.dtheta_css = dtheta
+        else:
+            raise Exception('[ESKF] Not implemented sensor')
 
     def reset(self):
         self.dx = np.zeros((self.dim_dx, 1)) # dx = 0
@@ -240,9 +249,9 @@ class ErrorStateKalmanFilter(object):
 
     def get_ss_vect(self, I, I_max):
         Ix = max(I[0], I[1])
-        sx = -2*np.argmax(I[0], I[1]) + 1
+        sx = -2*np.argmax((I[0], I[1])) + 1
         Iy = max(I[2], I[3])
-        sy = -2*np.argmax(I[2], I[3]) + 1
+        sy = -2*np.argmax((I[2], I[3])) + 1
         Iz = max(I[4], 0)
         sz = -1
 
@@ -250,6 +259,9 @@ class ErrorStateKalmanFilter(object):
 
         if Ix<noise_thr and Iy<noise_thr and Iz<noise_thr:
             # shadow
+            ss_unit_b = np.zeros(3)
+        elif Iz < noise_thr:
+            # ignore incomplete observations
             ss_unit_b = np.zeros(3)
         else:
             ss_unit_b = np.array([sx*Ix, sy*Iy, sz*Iz])/I_max
