@@ -267,3 +267,37 @@ class ErrorStateKalmanFilter(object):
             ss_unit_b = np.array([sx*Ix, sy*Iy, sz*Iz])/I_max
         
         return ss_unit_b
+
+    def get_fss_vect(self, Vratio, calib):
+        h = calib[0]
+        x0 = calib[1]
+        y0 = calib[2]
+        T = calib[3]
+        q_c2b = calib[4]
+
+        if Vratio[0] == 0 and Vratio[1] == 0: #invalid measurement
+            return np.array([0, 0, 0])
+
+        xd_ = Vratio[0] + x0
+        yd_ = Vratio[1] + y0
+
+        [xd, yd] = T.dot(np.array([xd_, yd_]))
+
+        phi = np.arctan2(xd, yd)
+        theta = np.arctan2(np.sqrt(xd**2 + yd**2), h)
+
+        rfss_c = np.array([np.cos(theta), np.sin(theta)*np.cos(phi), np.sin(theta)*np.sin(phi)])
+        rfss_b = q_c2b.frame_conv(rfss_c, "q")
+        return rfss_b
+
+    def get_fss_qdvect(self, Vratio, calib):
+        h = calib[0]
+        x0 = calib[1]
+        y0 = calib[2]
+        T = calib[3]
+
+        xd_ = Vratio[0] + x0
+        yd_ = Vratio[1] + y0
+
+        [xd, yd] = T.dot(np.array([xd_, yd_]))
+        return np.array([xd, yd])
