@@ -28,6 +28,7 @@ class ErrorStateKalmanFilter(object):
         self.wb = np.zeros(3)               # states 5-7
         self.dtheta_mag = np.zeros(3)       # tmp magnetic error observation
         self.dtheta_css = np.zeros(3)       # tmp csun sensor error observation
+        self.dtheta_fss = np.zeros(3)       # tmp fsun sensor error observation
 
         self.std_rn_w = 1e-3                # gyro noise standard deviation [rad/s]
         self.std_rw_w = 1e-3                # gyro random walk standard deviation [rad/s*s^0.5]
@@ -131,6 +132,8 @@ class ErrorStateKalmanFilter(object):
             self.dtheta_mag = dtheta
         elif stype == "css":
             self.dtheta_css = dtheta
+        elif stype == "fss":
+            self.dtheta_fss = dtheta
         else:
             raise Exception('[ESKF] Not implemented sensor')
 
