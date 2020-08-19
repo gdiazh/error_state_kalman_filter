@@ -293,6 +293,36 @@ class ErrorStateKalmanFilter(object):
         rfss_b = q_c2b.frame_conv(rfss_c, "q")
         return rfss_b
 
+    def get_fss_mean_vect(self, rsfss_all_b):
+        # Select valid sun unit vectors by axis
+        noise_thr = 0.001
+        rsfss_all_norm = np.sum(np.sqrt(rsfss_all_b**2), axis = 1)
+        rfss_b_valid_1 = np.zeros(3)
+        rfss_b_valid_2 = np.zeros(3)
+        rfss_b_valid_3 = np.zeros(3)
+        # body x-axis selection
+        if rsfss_all_norm[0] < noise_thr and rsfss_all_norm[1] < noise_thr:
+            rfss_b_valid_1 = np.zeros(3)
+        elif rsfss_all_norm[0] >= noise_thr:
+            rfss_b_valid_1 = rsfss_all_b[0]
+        else:
+            rfss_b_valid_1 = rsfss_all_b[1]
+        # body y-axis selection
+        if rsfss_all_norm[2] < noise_thr and rsfss_all_norm[3] < noise_thr:
+            rfss_b_valid_2 = np.zeros(3)
+        elif rsfss_all_norm[2] >= noise_thr:
+            rfss_b_valid_2 = rsfss_all_b[2]
+        else:
+            rfss_b_valid_2 = rsfss_all_b[3]
+        # body z-axis selection
+        if rsfss_all_norm[4] < noise_thr:
+            rfss_b_valid_3 = np.zeros(3)
+        else:
+            rfss_b_valid_3 = rsfss_all_b[4]
+
+        rfss_mean = (rfss_b_valid_1 + rfss_b_valid_2 + rfss_b_valid_3)/3.0
+        return rfss_mean
+
     def get_fss_qdvect(self, Vratio, calib):
         h = calib[0]
         x0 = calib[1]
