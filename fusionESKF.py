@@ -11,8 +11,6 @@
 * [1] Joan Solà (2017). Quaternion Kinematics for the error-state Kalman filter
 """
 
-import time
-
 from ESKF import ErrorStateKalmanFilter
 from quaternions import *
 
@@ -98,7 +96,6 @@ if __name__ == '__main__':
     # TEST
     import numpy as np
     import matplotlib.pyplot as plt
-    import time
 
     from gyroSim import gyroSim
     from magSim import magSim
@@ -140,7 +137,6 @@ if __name__ == '__main__':
 
     # Data Fusion Algoritm
     fusion = FusionEKF(gyro_rate = 100, mag_rate = 10)
-    t0_sim = time.time()
     t_sim = 0
 
     # Fusion Data Storage
@@ -151,6 +147,7 @@ if __name__ == '__main__':
     P_est_Nx6x6_b = np.zeros((N,6,6))
     detP_est_Nx1_b = np.zeros((N,1))
 
+    print("Running ESKF")
     for i in range(0, N):
         # Get sensor measurement
         rate_m_Nx3_b[i] = gyro.getMeasure(rate_true_Nx3_b[i])
@@ -166,6 +163,10 @@ if __name__ == '__main__':
         dx_est_Nx6_b[i] = fusion.eskf.dx.T
         P_est_Nx6x6_b[i] = fusion.eskf.P
         detP_est_Nx1_b[i] = np.linalg.det(fusion.eskf.P)
+        if 100*i/N%(5)== 0:
+            print(100*i/N, "%...")
+    print(100, "%")
+    print("Test Finished")
 
     # Data Visualization
     from monitor import Monitor

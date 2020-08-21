@@ -13,7 +13,6 @@
 """
 
 import numpy as np
-import matplotlib.pyplot as plt
 import time
 
 class gyroSim:
@@ -104,6 +103,7 @@ class gyroSim:
 
 if __name__ == '__main__':
     # TEST
+    import matplotlib.pyplot as plt
 
     # Time parameters for simulation
     tf = 10
