@@ -31,7 +31,7 @@ class ErrorStateKalmanFilter(object):
         self.dtheta_fss = np.zeros(3)       # tmp fsun sensor error observation
 
         self.std_rn_w = 1e-3                # gyro noise standard deviation [rad/s]
-        self.std_rw_w = 1e-3                # gyro random walk standard deviation [rad/s*s^0.5]
+        self.std_rw_w = 1e-4                # gyro random walk standard deviation [rad/s*s^0.5]
         self.std_rn_mag = 1e-4              # magnetometer noise standard deviation []
 
         self.P = np.eye(dim_dx)             # uncertainty covariance (6x6 matrix)
@@ -88,7 +88,7 @@ class ErrorStateKalmanFilter(object):
         F2 = np.append(np.zeros((3,3)), self.I33, axis = 1)
         self.F = np.append(F1, F2, axis = 0)
         self.updateQ(dt)
-        self.P = self.F * self.P * self.F.T + self.Q
+        self.P = self.F.dot(self.P).dot(self.F.T) + self.Q
 
     def update(self, z, HJacobian, h, args, stype):
         """
@@ -107,7 +107,11 @@ class ErrorStateKalmanFilter(object):
         H = HJacobian(self.x, args)        #(dim_z,dim_dx)
         PHt = self.P.dot(H.T)              #(dim_dx, dim_z)
         S = H.dot(PHt) + self.R            #(dim_z, dim_z)
-        SI = np.linalg.inv(S)
+        if np.abs(np.linalg.det(S))>1E-25:
+            SI = np.linalg.inv(S)
+        else:
+            SI = np.zeros((self.dim_z, self.dim_z))
+            print("[ESKF][WARNING] Singular Matrix")
         K = PHt.dot(SI)                    #(dim_dx, dim_z)
         
         # Error state update
@@ -115,7 +119,7 @@ class ErrorStateKalmanFilter(object):
         self.dx = K.dot(self.y)
         
         # Error covariance update
-        self.P = (self.I-K.dot(H))*self.P
+        self.P = np.dot(self.I-K.dot(H), self.P)
 
         # Auxiliar error state variables
         dtheta = self.dx[0:3]
